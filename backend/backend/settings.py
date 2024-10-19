@@ -144,3 +144,14 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,              # Invalide l'ancien refresh token après le renouvellement
 }
 WSGI_APPLICATION = 'backend.wsgi.application'
+
+
+# Gestion des messagerie pour la reinitialisation de mot de passe
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # Par exemple, smtp.gmail.com pour Gmail
+EMAIL_PORT = 587  # Port SMTP de votre fournisseur de messagerie
+EMAIL_USE_TLS = True  # Ou False si votre fournisseur de messagerie ne prend pas en charge TLS
+EMAIL_HOST_USER = 'memouekone@esp.sn'  # Votre adresse e-mail
+EMAIL_HOST_PASSWORD = 'chst eqjv vjgc dxst'  # Votre mot de passe e-mail
+
+SITE_URL = 'http://localhost:8000'  # Changez cette valeur en fonction de votre URL de site

@@ -92,7 +92,8 @@ class AgenceEmballageViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
 
 class OffreViewSet(viewsets.ModelViewSet):
-    queryset = Offre.objects.all()
+    current_date = timezone.now()
+    queryset = Offre.objects.filter(date_limite__gte=current_date)
     serializer_class = OffreSerializer
     #permission_classes = [IsAuthenticated]
     permission_classes = [AllowAny]

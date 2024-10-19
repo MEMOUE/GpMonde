@@ -1,7 +1,8 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin, Group, Permission, User
+from django.core.mail import send_mail
 from django.db import models
 from django.conf import settings
-
+from django.utils.crypto import get_random_string
 
 
 class CustomUserManager(BaseUserManager):
@@ -11,6 +12,7 @@ class CustomUserManager(BaseUserManager):
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
+        user.is_active = False  # Désactiver l'utilisateur jusqu'à la vérification de l'email
         user.save(using=self._db)
         return user
 
@@ -30,30 +32,30 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=30, blank=True)
     last_name = models.CharField(max_length=30, blank=True)
-    is_active = models.BooleanField(default=True)
+    phone = models.CharField(max_length=15, blank=True, null=True)
+    is_active = models.BooleanField(default=False)  # Inactif jusqu'à vérification de l'email
     is_staff = models.BooleanField(default=False)
+    email_verified = models.BooleanField(default=False)  # Ajout pour suivre la vérification d'email
+    verification_token = models.CharField(max_length=64, null=True, blank=True)  # Token de vérification
 
     objects = CustomUserManager()
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
 
-    # Add related_name to avoid reverse accessor conflicts
-    groups = models.ManyToManyField(
-        Group,
-        related_name='customuser_set',  # Unique related name for groups
-        blank=True
-    )
-    user_permissions = models.ManyToManyField(
-        Permission,
-        related_name='customuser_set',  # Unique related name for user_permissions
-        blank=True
-    )
-
     def __str__(self):
         return self.email
 
+    def send_verification_email(self):
+        # Générer un token unique pour la vérification
+        verification_token = get_random_string(length=32)
+        self.verification_token = verification_token
+        self.save()
 
+        verification_link = f"http://localhost:8080/verify-email/{verification_token}/"
+        subject = 'Vérifiez votre adresse email'
+        message = f'Bonjour {self.first_name},\n\nCliquez sur le lien pour vérifier votre adresse email : {verification_link}'
+        send_mail(subject, message, 'no-reply@yourdomain.com', [self.email])
 
 class VisitorActivityLog(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)  # Utilise AUTH_USER_MODEL ici
